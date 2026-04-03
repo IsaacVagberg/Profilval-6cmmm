@@ -625,72 +625,58 @@ h1 {
 }
 
 
-/* Media Queries */
-@media (max-width: 1200px) {
-    .app-container {
-        flex-direction: column;
-        height: calc(100vh - 100px);
-        overflow: hidden;
-    }
+/* =========================================
+   Mobilanpassning (max-width: 900px)
+   ========================================= */
+@media (max-width: 900px) {
 
-    .schedule-section {
-        flex: auto;
-        min-height: 40vh;
-    }
-
-    .sidebar {
-        max-width: 100%;
-        flex-direction: row;
-        overflow-x: auto;
-        overflow-y: auto;
-        /* let sidebar scroll its whole length */
-        padding-bottom: 0.5rem;
-        flex: 1;
-    }
-
-    .filter-bar {
-        min-width: 300px;
-        flex-shrink: 0;
-    }
-
-    .list-container {
-        min-width: 320px;
-        flex-shrink: 0;
-        margin-right: 1rem;
-    }
-}
-
-@media print {
-
-    .main-header,
-    .app-container {
-        display: none !important;
-    }
-
-    .modal-overlay {
-        position: static;
-        background: none;
-        backdrop-filter: none;
-        opacity: 1;
-        pointer-events: auto;
-    }
-
-    .modal-content {
-        box-shadow: none;
-        border: none;
-        color: black;
-        background: white;
-        width: 100%;
-        max-width: 100%;
-    }
-
-    .close-btn,
-    .modal-actions {
-        display: none;
-    }
-
+    /* 1. Lås upp höjden så att skärmen går att scrolla naturligt på mobiler */
     body {
-        background: white;
-        color: black;
+        height: auto;
+        overflow-y: auto;
+    }
+
+    /* 2. Ändra huvudlayout från rad till kolumn */
+    .app-container {
+        flex-direction: column !important;
+        height: auto !important;
+        overflow-y: visible !important;
+        padding: 1rem;
+        /* Något smalare padding för att vinna skärmyta */
+    }
+
+    /* 3. Sidopanelen lägger sig under schemat och tar 100% bredd */
+    .sidebar {
+        max-width: 100% !important;
+        width: 100% !important;
+        flex-direction: column !important;
+        /* Stapla filter-fält och kurslista vertikalt */
+        flex: none !important;
+        min-height: 50vh;
+        /* Se till att hela kurslistan får ordentligt med plats neråt */
+    }
+
+    .filter-bar,
+    .list-container {
+        min-width: 100% !important;
+        margin-right: 0 !important;
+    }
+
+    /* 4. Tabellen - Horisontell swipe-scroll (overflow-x) */
+    .schedule-section {
+        flex: none !important;
+    }
+
+    .table-wrapper {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+        /* Ger mjuk, naturlig "bounce"-scroll på iOS */
+        padding-bottom: 0.5rem;
+        /* Space för mobila scrollbars */
+    }
+
+    /* 5. Tvinga fram en minimibredd så kolumnerna/blocken aldrig trycks ihop för mycket */
+    .schedule-table {
+        min-width: 600px !important;
     }
 }
