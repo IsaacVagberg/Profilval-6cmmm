@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="sv">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Masterval Planerare</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <header class="main-header">
+        <div class="header-top">
+            <h1>Masterval: Civilingenjör Maskinteknik</h1>
+            <div class="controls">
+                <select id="profile-select" class="glass-input">
+                    <!-- Fylls in av JS -->
+                </select>
+                <button id="clear-btn" class="btn btn-danger">Rensa schema</button>
+                <button id="save-btn" class="btn btn-success">Ladda ner</button>
+            </div>
+        </div>
+
+        <div class="stats-container">
+            <div class="stat-box" id="stat-total">
+                <span class="stat-label">Totala Poäng</span>
+                <span class="stat-value"><span id="val-total">0</span> / 120 hp</span>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="prog-total"></div>
+                </div>
+            </div>
+            <div class="stat-box" id="stat-advanced">
+                <span class="stat-label">Avancerad Nivå (A)</span>
+                <span class="stat-value"><span id="val-advanced">0</span> / 90 hp</span>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="prog-advanced"></div>
+                </div>
+            </div>
+            <div class="stat-box" id="stat-tm">
+                <span class="stat-label">Maskin-Master (TM)</span>
+                <span class="stat-value"><span id="val-tm">0</span> / 18 hp</span>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="prog-tm"></div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="app-container">
+
+        <section class="schedule-section">
+            <div class="table-wrapper">
+                <table class="schedule-table" id="schedule">
+                    <thead>
+                        <tr>
+                            <th>Termin / Period</th>
+                            <th>Block 1</th>
+                            <th>Block 2</th>
+                            <th>Block 3</th>
+                            <th>Block 4</th>
+                        </tr>
+                    </thead>
+                    <tbody id="schedule-body">
+                        <!-- Genereras av JS -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <aside class="sidebar" id="sidebar">
+            <div class="filter-bar glass-panel" style="padding: 0.5rem; margin-bottom: 0.3rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.3rem;">
+                    <h4
+                        style="font-size: 0.75rem; color: #94a3b8; margin: 0; text-transform: uppercase; letter-spacing: 0.05em;">
+                        Filter</h4>
+                    <button class="btn btn-danger" id="clear-filter-btn"
+                        style="padding: 0.1rem 0.3rem; font-size: 0.6rem; border-radius: 3px; background: rgba(239, 68, 68, 0.4);">Rensa</button>
+                </div>
+                <!-- Filter fields -->
+                <div style="display: flex; gap: 0.3rem; flex-wrap: wrap;">
+                    <select id="filter-term" class="glass-input"
+                        style="flex:1; min-width: 60px; padding: 0.2rem 0.4rem; font-size: 0.75rem;">
+                        <option value="Alla">Alla Terminer</option>
+                        <option value="7">Termin 7</option>
+                        <option value="8">Termin 8</option>
+                        <option value="9">Termin 9</option>
+                        <option value="10">Termin 10</option>
+                    </select>
+                    <select id="filter-period" class="glass-input"
+                        style="flex:1; min-width: 60px; padding: 0.2rem 0.4rem; font-size: 0.75rem;">
+                        <option value="Alla">Alla Perioder</option>
+                        <option value="1">Period 1</option>
+                        <option value="2">Period 2</option>
+                    </select>
+                    <select id="filter-block" class="glass-input"
+                        style="flex:1; min-width: 60px; padding: 0.2rem 0.4rem; font-size: 0.75rem;">
+                        <option value="Alla">Alla Block</option>
+                        <option value="1">Block 1</option>
+                        <option value="2">Block 2</option>
+                        <option value="3">Block 3</option>
+                        <option value="4">Block 4</option>
+                    </select>
+                </div>
+                <div style="display: flex; gap: 0.5rem; margin-top: 0.4rem; flex-wrap: wrap; align-items: center;">
+                    <label style="font-size: 0.7rem; display: flex; align-items: center; gap: 3px; cursor: pointer;">
+                        <input type="checkbox" id="filter-adv">
+                        A-nivå
+                    </label>
+                    <label style="font-size: 0.7rem; display: flex; align-items: center; gap: 3px; cursor: pointer;">
+                        <input type="checkbox" id="filter-multi">
+                        Flerperiod
+                    </label>
+                    <select id="course-type-filter" class="glass-input"
+                        style="font-size: 0.7rem; padding: 0.15rem 0.3rem; flex-grow: 1;">
+                        <option value="ALL">Alla Typer</option>
+                        <option value="O">Oblig.</option>
+                        <option value="V">Inrikt.</option>
+                        <option value="F">Valbara</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Single merged course list -->
+            <div class="list-container">
+                <div class="course-list" id="all-courses"></div>
+            </div>
+        </aside>
+    </main>
+
+    <!-- Modal för Sammanställning -->
+    <div id="receipt-modal" class="modal-overlay hidden">
+        <div class="modal-content glass-panel">
+            <h2 style="font-size: 1.25rem; font-weight: 600;">Sammanställning av dina kurser</h2>
+            <button class="close-btn" id="modal-close">&times;</button>
+            <div class="receipt-info" id="receipt-info"></div>
+            <ul class="receipt-list" id="receipt-list"></ul>
+            <div class="modal-actions">
+                <button class="btn btn-primary" onclick="window.print()">Skriv ut PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Third party script for screenshot -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="data.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>

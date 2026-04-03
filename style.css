@@ -1,0 +1,683 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+    /* Mörkt Tech Tema / Glassmorphism */
+    --bg-color: #0f172a;
+    --text-color: #f8fafc;
+    --text-muted: #94a3b8;
+
+    --glass-bg: rgba(30, 41, 59, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+
+    /* Varnings/Status färger */
+    --color-obl: rgba(239, 68, 68, 0.85);
+    /* Rödaktig (Obligatorisk) */
+    --color-inr: rgba(59, 130, 246, 0.85);
+    /* Blåaktig (Inriktning) */
+    --color-val: rgba(16, 185, 129, 0.85);
+    /* Grönaktig (Valbar) */
+
+    --bg-hover: rgba(255, 255, 255, 0.1);
+
+    --drop-valid: rgba(59, 130, 246, 0.3);
+    --drop-invalid: rgba(239, 68, 68, 0.3);
+
+    --success: #22c55e;
+    --danger: #ef4444;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg-color);
+    background-image:
+        radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.15) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(239, 68, 68, 0.1) 0px, transparent 50%);
+    background-attachment: fixed;
+    color: var(--text-color);
+    height: 100vh;
+    overflow: hidden;
+    /* Förhindrar att hela sidan scrollar, bara listorna ska scrolla */
+    display: flex;
+    flex-direction: column;
+}
+
+/* Glassmorphism Utilities */
+.glass-panel {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    border-radius: 12px;
+}
+
+/* Header */
+.main-header {
+    padding: 1.5rem 2rem;
+    background: rgba(15, 23, 42, 0.8);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--glass-border);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    background: linear-gradient(to right, #60a5fa, #a78bfa);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.controls {
+    display: flex;
+    gap: 1rem;
+}
+
+.glass-input {
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--glass-border);
+    color: var(--text-color);
+    border-radius: 6px;
+    padding: 0.5rem 1rem;
+    font-family: 'Inter', sans-serif;
+    outline: none;
+    cursor: pointer;
+    backdrop-filter: blur(4px);
+}
+
+.glass-input option {
+    background: var(--bg-color);
+    /* Fallback för dropdowns */
+    color: var(--text-color);
+}
+
+.btn {
+    padding: 0.5rem 1.25rem;
+    border-radius: 6px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.2s;
+    color: white;
+}
+
+.btn-danger {
+    background: rgba(239, 68, 68, 0.8);
+    border: 1px solid rgba(239, 68, 68, 0.4);
+}
+
+.btn-danger:hover {
+    background: rgba(239, 68, 68, 1);
+}
+
+.btn-success {
+    background: rgba(34, 197, 94, 0.8);
+    border: 1px solid rgba(34, 197, 94, 0.4);
+}
+
+.btn-success:hover {
+    background: rgba(34, 197, 94, 1);
+}
+
+.btn-primary {
+    background: rgba(59, 130, 246, 0.8);
+    border: 1px solid rgba(59, 130, 246, 0.4);
+}
+
+.btn-primary:hover {
+    background: rgba(59, 130, 246, 1);
+}
+
+/* Stats */
+.stats-container {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.stat-box {
+    flex: 1;
+    min-width: 200px;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+/* Grön glöd när målet är uppnått */
+.stat-box.goal-reached {
+    border-color: rgba(34, 197, 94, 0.5);
+    box-shadow: 0 0 15px rgba(34, 197, 94, 0.2);
+}
+
+/* Röd varning (överskridit en max-gräns om vi implementerar det i hela appen, t.ex > 15 hp / period, fast i headern är det totaler) */
+.stat-box.warning {
+    border-color: rgba(239, 68, 68, 0.5);
+    color: var(--danger);
+}
+
+.stat-label {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+}
+
+.stat-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.progress-bar {
+    height: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #60a5fa, #a78bfa);
+    width: 0%;
+    transition: width 0.4s ease, background 0.4s ease;
+}
+
+.stat-box.goal-reached .progress-fill {
+    background: linear-gradient(90deg, #34d399, #10b981);
+}
+
+/* Layout */
+.app-container {
+    display: flex;
+    flex: 1;
+    padding: 1.5rem;
+    gap: 1.5rem;
+    overflow: hidden;
+    height: calc(100vh - 160px);
+    /* rough estimate of header height */
+}
+
+/* Schedule */
+.schedule-section {
+    flex: 3;
+    display: flex;
+    flex-direction: column;
+    background: var(--glass-bg);
+    border-radius: 12px;
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(12px);
+    overflow: hidden;
+}
+
+.table-wrapper {
+    flex: 1;
+    overflow: auto;
+    padding: 0 1rem 1rem 1rem; /* Ingen padding top för att sticky ska sitta fast mot kanten */
+}
+
+.schedule-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 4px;
+    table-layout: fixed;
+}
+
+.schedule-table th {
+    background: #1e293b; /* Opaque background for sticky header */
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 0.85rem;
+    padding: 0.75rem;
+    text-transform: uppercase;
+    border-radius: 6px;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+}
+
+.schedule-table th:first-child {
+    width: 120px;
+}
+
+.schedule-table td {
+    background: rgba(0, 0, 0, 0.15);
+    border: 1px dashed rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    height: 90px;
+    vertical-align: top;
+    padding: 4px;
+    position: relative;
+    transition: background 0.2s, border-color 0.2s;
+}
+
+.schedule-table td:first-child {
+    background: rgba(0, 0, 0, 0.2);
+    border: none;
+    text-align: center;
+    vertical-align: middle;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+/* Dropzone feedbacks */
+.schedule-table td.valid-drop {
+    background: var(--drop-valid);
+    border-color: #3b82f6;
+}
+
+.schedule-table td.invalid-drop {
+    background: var(--drop-invalid);
+    border-color: #ef4444;
+}
+
+/* Varning vid över 15 HP i perioden */
+.period-warning {
+    color: #94a3b8;
+    font-size: 0.75rem;
+    display: block;
+    margin-top: 4px;
+}
+
+.period-warning.warning {
+    color: #ef4444;
+}
+
+/* Sidebar */
+.sidebar {
+    flex: 1;
+    min-width: 320px;
+    max-width: 400px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+
+    overflow-y: auto;
+
+    padding-right: 0.5rem;
+
+    /* FIX */
+    min-height: 0;
+    /* 🔥 gör att children inte överlappar */
+}
+
+/* Anpassad scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.4);
+}
+
+.list-container {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(12px);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    /* FIX */
+    min-height: 0;
+    /* 🔥 kritisk */
+    overflow: hidden;
+}
+
+.list-container h3 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    padding: 1rem;
+    border-bottom: 1px solid var(--glass-border);
+    margin: 0;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 12px 12px 0 0;
+}
+
+.course-list {
+    flex: 1;
+    /* Do not restrict height natively */
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-height: 0;
+    overflow-y: auto;
+    /* 🔥 scroll sker här istället */
+}
+
+/* Course Card */
+.course-card {
+    background: rgba(255, 255, 255, 0.05);
+    /* grundfärg, modifieras i JS beroende på typ */
+    border: 1px solid var(--glass-border);
+    border-radius: 6px;
+    padding: 0.5rem 0.75rem;
+    cursor: grab;
+    position: relative;
+    user-select: none;
+    transition: transform 0.1s, box-shadow 0.2s, background 0.2s;
+    font-size: 0.85rem;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.course-card.list-mode {
+    border-left-width: 4px;
+}
+
+.course-card.type-O {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.05));
+    border-left-color: #ef4444;
+}
+
+.course-card.type-V {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(59, 130, 246, 0.05));
+    border-left-color: #3b82f6;
+}
+
+.course-card.type-F {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(34, 197, 94, 0.05));
+    border-left-color: #22c55e;
+}
+
+.course-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.course-card:active {
+    cursor: grabbing;
+}
+
+.course-card.fixed {
+    cursor: not-allowed;
+    opacity: 0.9;
+    background: rgba(255, 255, 255, 0.1);
+    border-left: 4px solid #94a3b8;
+}
+
+.span-all-blocks {
+    position: absolute;
+    left: 4px;
+    right: -4px; /* stop at block 4 boundary */
+    width: calc(400% + 8px); /* 4 blocks plus small gap */
+    z-index: 10;
+    overflow: hidden;
+}
+
+/* Block 2-4 celler dolda när Examensarbete spänner över raden */
+.exam-span-cell {
+    background: transparent !important;
+    border: none !important;
+    pointer-events: none;
+}
+
+.course-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 700;
+}
+
+.course-code {
+    letter-spacing: 0.5px;
+}
+
+.course-hp {
+    font-size: 0.75rem;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 2px 6px;
+    border-radius: 10px;
+}
+
+.badge-multi {
+    font-size: 0.65rem;
+    font-weight: 700;
+    background: rgba(251, 191, 36, 0.25);
+    color: #fbbf24;
+    border: 1px solid rgba(251, 191, 36, 0.5);
+    padding: 1px 5px;
+    border-radius: 8px;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+}
+
+.course-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 500;
+}
+
+.course-meta {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    display: flex;
+    justify-content: space-between;
+}
+
+/* Ta bort kryss */
+.remove-btn {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    background: #ef4444;
+    color: white;
+    border: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    z-index: 10;
+}
+
+.course-card:hover .remove-btn:not(.hidden-btn) {
+    display: flex;
+}
+
+.course-card.fixed .remove-btn {
+    display: none !important;
+}
+
+.hidden-btn {
+    display: none !important;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* Modal */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 1;
+    transition: opacity 0.3s;
+}
+
+.modal-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.modal-content {
+    background: rgba(15, 23, 42, 0.95);
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    padding: 2rem;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    overflow-y: auto;
+}
+
+.close-btn {
+    position: absolute;
+    top: 1rem;
+    right: 1.5rem;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 2rem;
+    cursor: pointer;
+}
+
+.close-btn:hover {
+    color: white;
+}
+
+.receipt-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    border-bottom: 1px solid var(--glass-border);
+    padding-bottom: 1rem;
+}
+
+.receipt-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.receipt-list li {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 6px;
+    font-size: 0.9rem;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+
+/* Media Queries */
+@media (max-width: 1200px) {
+    .app-container {
+        flex-direction: column;
+        height: calc(100vh - 100px);
+        overflow: hidden;
+    }
+
+    .schedule-section {
+        flex: auto;
+        min-height: 40vh;
+    }
+
+    .sidebar {
+        max-width: 100%;
+        flex-direction: row;
+        overflow-x: auto;
+        overflow-y: auto;
+        /* let sidebar scroll its whole length */
+        padding-bottom: 0.5rem;
+        flex: 1;
+    }
+
+    .filter-bar {
+        min-width: 300px;
+        flex-shrink: 0;
+    }
+
+    .list-container {
+        min-width: 320px;
+        flex-shrink: 0;
+        margin-right: 1rem;
+    }
+}
+
+@media print {
+
+    .main-header,
+    .app-container {
+        display: none !important;
+    }
+
+    .modal-overlay {
+        position: static;
+        background: none;
+        backdrop-filter: none;
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .modal-content {
+        box-shadow: none;
+        border: none;
+        color: black;
+        background: white;
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .close-btn,
+    .modal-actions {
+        display: none;
+    }
+
+    body {
+        background: white;
+        color: black;
+    }
+}
