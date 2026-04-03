@@ -60,13 +60,14 @@ body {
 
 /* Header */
 .main-header {
-    padding: 1.5rem 2rem;
+    padding: 0.75rem 1.5rem;
     background: rgba(15, 23, 42, 0.8);
     backdrop-filter: blur(16px);
     border-bottom: 1px solid var(--glass-border);
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 0.75rem;
+    /* Avståndet mellan de två raderna */
     position: sticky;
     top: 0;
     z-index: 100;
@@ -75,13 +76,15 @@ body {
 .header-top {
     display: flex;
     justify-content: space-between;
+    /* Titel till vänster, knappar till höger */
     align-items: center;
-    flex-wrap: wrap;
-    gap: 1rem;
+    width: 100%;
 }
 
 h1 {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
+    margin: 0;
+    /* Tar bort eventuella standardmarginaler */
     font-weight: 700;
     background: linear-gradient(to right, #60a5fa, #a78bfa);
     -webkit-background-clip: text;
@@ -99,21 +102,17 @@ h1 {
     border: 1px solid var(--glass-border);
     color: var(--text-color);
     border-radius: 6px;
-    padding: 0.5rem 1rem;
+    padding: 0.35rem 0.75rem;
+    /* Minskad från 0.5rem 1rem */
     font-family: 'Inter', sans-serif;
     outline: none;
     cursor: pointer;
     backdrop-filter: blur(4px);
 }
 
-.glass-input option {
-    background: var(--bg-color);
-    /* Fallback för dropdowns */
-    color: var(--text-color);
-}
-
 .btn {
-    padding: 0.5rem 1.25rem;
+    padding: 0.35rem 1rem;
+    /* Minskad från 0.5rem 1.25rem */
     border-radius: 6px;
     border: none;
     font-weight: 600;
@@ -153,33 +152,30 @@ h1 {
 /* Stats */
 .stats-container {
     display: flex;
-    gap: 1.5rem;
-    flex-wrap: wrap;
+    gap: 1rem;
+    flex-wrap: nowrap;
+    /* Försöker hålla dem på en rad, ändra till wrap om du stöder små skärmar */
+    width: 100%;
 }
 
 .stat-box {
     flex: 1;
-    min-width: 200px;
+    position: relative;
+    /* Viktigt för att progressbaren ska kunna ligga i bakgrunden */
     background: rgba(0, 0, 0, 0.2);
     border: 1px solid var(--glass-border);
-    border-radius: 8px;
-    padding: 1rem;
+    border-radius: 6px;
+    padding: 0.5rem 1rem;
     display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
+    flex-direction: row;
+    /* Ändrad till row */
+    justify-content: space-between;
+    /* Skjuter isär etikett och värde */
+    align-items: center;
+    overflow: hidden;
+    /* Förhindrar att progressbaren spiller utanför de rundade hörnen */
     transition: all 0.3s ease;
-}
-
-/* Grön glöd när målet är uppnått */
-.stat-box.goal-reached {
-    border-color: rgba(34, 197, 94, 0.5);
-    box-shadow: 0 0 15px rgba(34, 197, 94, 0.2);
-}
-
-/* Röd varning (överskridit en max-gräns om vi implementerar det i hela appen, t.ex > 15 hp / period, fast i headern är det totaler) */
-.stat-box.warning {
-    border-color: rgba(239, 68, 68, 0.5);
-    color: var(--danger);
+    min-height: 36px;
 }
 
 .stat-label {
@@ -188,29 +184,42 @@ h1 {
     text-transform: uppercase;
     letter-spacing: 0.05em;
     font-weight: 600;
+    z-index: 2;
+    /* Placerar texten över progressbaren */
 }
 
 .stat-value {
-    font-size: 1.25rem;
+    font-size: 0.95rem;
+    /* Något mindre för att passa bra på en rad */
     font-weight: 700;
+    z-index: 2;
+    /* Placerar texten över progressbaren */
 }
 
 .progress-bar {
-    height: 6px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 3px;
-    overflow: hidden;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    /* Ta bort den gamla grå bakgrunden */
+    border-radius: 0;
+    /* Hörnen hanteras av .stat-box overflow: hidden */
+    z-index: 1;
+    /* Lägger sig bakom texten (som har z-index 2) */
 }
 
 .progress-fill {
     height: 100%;
-    background: linear-gradient(90deg, #60a5fa, #a78bfa);
+    /* Halvtransparent färg så att vit text syns ovanpå */
+    background: linear-gradient(90deg, rgba(96, 165, 250, 0.25), rgba(167, 139, 250, 0.25));
     width: 0%;
     transition: width 0.4s ease, background 0.4s ease;
 }
 
 .stat-box.goal-reached .progress-fill {
-    background: linear-gradient(90deg, #34d399, #10b981);
+    background: linear-gradient(90deg, rgba(52, 211, 153, 0.25), rgba(16, 185, 129, 0.25));
 }
 
 /* Layout */
@@ -220,8 +229,8 @@ h1 {
     padding: 1.5rem;
     gap: 1.5rem;
     overflow: hidden;
-    height: calc(100vh - 160px);
-    /* rough estimate of header height */
+    height: calc(100vh - 100px);
+    /* Ändrad från 160px för att utnyttja den nya ytan */
 }
 
 /* Schedule */
@@ -239,7 +248,8 @@ h1 {
 .table-wrapper {
     flex: 1;
     overflow: auto;
-    padding: 0 1rem 1rem 1rem; /* Ingen padding top för att sticky ska sitta fast mot kanten */
+    padding: 0 1rem 1rem 1rem;
+    /* Ingen padding top för att sticky ska sitta fast mot kanten */
 }
 
 .schedule-table {
@@ -250,7 +260,8 @@ h1 {
 }
 
 .schedule-table th {
-    background: #1e293b; /* Opaque background for sticky header */
+    background: #1e293b;
+    /* Opaque background for sticky header */
     color: var(--text-muted);
     font-weight: 600;
     font-size: 0.85rem;
@@ -260,7 +271,7 @@ h1 {
     position: sticky;
     top: 0;
     z-index: 20;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
 }
 
 .schedule-table th:first-child {
@@ -438,8 +449,10 @@ h1 {
 .span-all-blocks {
     position: absolute;
     left: 4px;
-    right: -4px; /* stop at block 4 boundary */
-    width: calc(400% + 8px); /* 4 blocks plus small gap */
+    right: -4px;
+    /* stop at block 4 boundary */
+    width: calc(400% + 8px);
+    /* 4 blocks plus small gap */
     z-index: 10;
     overflow: hidden;
 }
