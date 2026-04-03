@@ -6,6 +6,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Masterval Planerare</title>
     <link rel="stylesheet" href="style.css">
+
+    <!-- 1. Mobile Drag Drop Polyfill -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mobile-drag-drop@2.3.0-rc.2/default.css">
+    <script src="https://cdn.jsdelivr.net/npm/mobile-drag-drop@2.3.0-rc.2/index.min.js"></script>
+
+    <!-- 2. Aktivera polyfillen -->
+    <script>
+        MobileDragDrop.polyfill({
+            // 250ms "long-press" krävs för att dra. Gör att användaren fortfarande kan scrolla fritt i kurslistorna!
+            holdToDrag: 250,
+            // Flyttar det dragna kortet så det följer fingret visuellt korrekt
+            dragImageTranslateOverride: MobileDragDrop.defaultCSS.dragImageTranslateOverride
+        });
+
+        // En nödvändig fix för (ffa) iOS/Safari för att skärmen inte ska följa med när man drar
+        window.addEventListener('touchmove', function () { }, { passive: false });
+    </script>
 </head>
 
 <body>
