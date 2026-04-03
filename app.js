@@ -386,6 +386,19 @@ function renderLists() {
     });
 }
 
+function getCourseUrl(course) {
+    const code = course.code || course.id.replace(/_[12](@.*)?$/, '');
+    const period = course.defP || course.period || '';
+    const term = period.split('-')[0]; // e.g. "T7", "T8", "T9", "T10"
+    let suffix = '';
+    if (term === 'T7') suffix = '/ht-2026#syllabus';
+    else if (term === 'T8') suffix = '/vt-2026#syllabus';
+    else if (term === 'T9') suffix = '/ht-2026#syllabus';
+    else if (term === 'T10') suffix = '/vt-2026#syllabus';
+    // T10 and others: no suffix
+    return `https://studieinfo.liu.se/kurs/${code}${suffix}`;
+}
+
 function createCourseCard(course, inSchedule) {
     const el = document.createElement('div');
     el.className = `course-card type-${course.type}`;
@@ -399,16 +412,18 @@ function createCourseCard(course, inSchedule) {
 
     el.innerHTML = `
         <div class="course-header">
-            <span class="course-code" title="Möjliga block: ${course.blocks.join(', ')}">${course.code}</span>
-            <div style="display: flex; gap: 4px; align-items: center;">
-                ${!inSchedule && course.span ? `<span class="badge-multi" title="Flerperiodskurs">★ 2P</span>` : ''}
-                <span class="course-hp">${course.hp} hp</span>
+            <div style="flex: 1;">
+                <span class="course-code" title="Möjliga block: ${course.blocks.join(', ')}">${course.code}</span>
+                <span class="course-name" title="${course.name}">${course.name}</span>
+            </div>
+            <div style="display: flex; gap: 4px; align-items: flex-start; flex-shrink: 0; margin-top: 2px;">
+                ${!inSchedule && course.span ? `<span class="badge-multi" title="Flerperiodskurs" style="font-size: 0.6rem; padding: 1px 3px;">★ 2P</span>` : ''}
+                <span class="course-hp" style="font-size: 0.65rem;">${course.hp} hp</span>
             </div>
         </div>
-        <div class="course-name" title="${course.name}">${course.name}</div>
         <div class="course-meta">
-            <span style="color: #94a3b8;">${!inSchedule ? `Plats: ${course.defP || course.period}` : ''}</span>
-            <span style="opacity: 1; margin-left: 8px;">${inSchedule ? '' : ` Block: ${course.blocks.join(', ')}`}</span>
+            <span style="color: #94a3b8;">${!inSchedule ? `P: ${course.defP || (course.period || '').replace('T', 'T').replace('-P', ' P')}` : ''}</span>
+            <span style="opacity: 1; margin-left: 4px;">${inSchedule ? '' : ` B: ${course.blocks.join(',')}`}</span>
             <span style="margin-left: auto;">${course.level}</span>
         </div>
         <button class="remove-btn ${inSchedule && !course.fixed ? '' : 'hidden-btn'}" title="Ta bort">&times;</button>
@@ -451,6 +466,17 @@ function createCourseCard(course, inSchedule) {
         if (!inSchedule) {
             el.addEventListener('click', () => {
                 autoPlaceCourse(course);
+            });
+        } else {
+            // Click i schemat öppnar kurssidan – men bara vid äkta klick (ej drag)
+            let dragMoved = false;
+            el.addEventListener('mousedown', () => { dragMoved = false; });
+            el.addEventListener('mousemove', () => { dragMoved = true; });
+            el.addEventListener('click', (e) => {
+                if (dragMoved) return;
+                if (e.target.closest('.remove-btn')) return;
+                const url = getCourseUrl(course);
+                window.open(url, '_blank', 'noopener,noreferrer');
             });
         }
     }

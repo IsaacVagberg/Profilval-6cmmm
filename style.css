@@ -385,19 +385,17 @@ h1 {
 
 .course-list {
     flex: 1;
-    /* Do not restrict height natively */
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    padding: 0.5rem;
     min-height: 0;
     overflow-y: auto;
-    /* 🔥 scroll sker här istället */
 }
 
 /* Course Card */
 .course-card {
     background: rgba(255, 255, 255, 0.05);
-    /* grundfärg, modifieras i JS beroende på typ */
     border: 1px solid var(--glass-border);
     border-radius: 6px;
     padding: 0.5rem 0.75rem;
@@ -435,6 +433,12 @@ h1 {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
+/* Schedule cards are clickable links */
+.course-card:not(.list-mode):not(.fixed):hover {
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(99, 179, 213, 0.25);
+}
+
 .course-card:active {
     cursor: grabbing;
 }
@@ -467,12 +471,15 @@ h1 {
 .course-header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
     font-weight: 700;
+    gap: 4px;
 }
 
 .course-code {
-    letter-spacing: 0.5px;
+    letter-spacing: 0.2px;
+    color: #e2e8f0;
+    white-space: nowrap;
 }
 
 .course-hp {
@@ -495,17 +502,23 @@ h1 {
 }
 
 .course-name {
-    white-space: nowrap;
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
     overflow: hidden;
-    text-overflow: ellipsis;
     font-weight: 500;
+    line-height: 1.2;
+    color: var(--text-color);
 }
 
 .course-meta {
-    font-size: 0.7rem;
+    font-size: 0.65rem;
     color: var(--text-muted);
     display: flex;
     justify-content: space-between;
+    margin-top: 2px;
 }
 
 /* Ta bort kryss */
