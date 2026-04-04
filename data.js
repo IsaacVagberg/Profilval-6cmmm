@@ -138,8 +138,8 @@ const profilData = {
   ],
   "KTPU": [
     { id: "TAOP88", code: "TAOP88", name: "Optimering för ingenjörer", hp: 6.0, level: "G2F", type: "O", inriktning: true, period: "T7-P1", defP: "T7-P1", defB: 1, blocks: [1], altPeriods: ["T8-P1", "T9-P1"] },
-    { id: "TMPR04_1", code: "TMPR04", name: "Konstruktionsteknik och produktutveckling - studiokurs (Del 1)", hp: 6.0, level: "A1N", type: "O", inriktning: true, period: "T7-P1", defP: "T7-P1", defB: 4, blocks: [4], span: 1, altPeriods: ["T9-P1"] },
-    { id: "TMPR04_2", code: "TMPR04", name: "Konstruktionsteknik och produktutveckling - studiokurs (Del 2)", hp: 6.0, level: "A1N", type: "O", inriktning: true, period: "T7-P2", defP: "T7-P2", defB: 4, blocks: [4], span: 1, altPeriods: ["T9-P2"] },
+    { id: "TMPR04_1", code: "TMPR04", name: "Konstruktionsteknik och produktutveckling - studiokurs (Del 1)", hp: 6.0, level: "A1N", type: "O", inriktning: true, period: "T7-P1", defP: "T7-P1", defB: 4, blocks: [4, 3, 2, 1], span: 1, altPeriods: ["T9-P1"] },
+    { id: "TMPR04_2", code: "TMPR04", name: "Konstruktionsteknik och produktutveckling - studiokurs (Del 2)", hp: 6.0, level: "A1N", type: "O", inriktning: true, period: "T7-P2", defP: "T7-P2", defB: 4, blocks: [4, 3, 2, 1], span: 1, altPeriods: ["T9-P2"] },
     { id: "TDDE56_1", code: "TDDE56", name: "Grunderna i AI och maskininlärning (Del 1)", hp: 3.0, level: "G2F", type: "V", inriktning: true, period: "T7-P1", defP: "T7-P1", defB: 2, blocks: [2], span: 1, altPeriods: ["T9-P1"] },
     { id: "TDDE56_2", code: "TDDE56", name: "Grunderna i AI och maskininlärning (Del 2)", hp: 3.0, level: "G2F", type: "V", inriktning: true, period: "T7-P2", defP: "T7-P2", defB: 1, blocks: [1], span: 1, altPeriods: ["T9-P2"] },
     { id: "TMME14", code: "TMME14", name: "Maskinelement, fortsättningskurs", hp: 6.0, level: "A1N", type: "V", inriktning: true, period: "T7-P1", defP: "T7-P1", defB: 3, blocks: [3], altPeriods: ["T9-P1"] },

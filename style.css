@@ -1,30 +1,95 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
-    /* Mörkt Tech Tema / Glassmorphism */
-    --bg-color: #0f172a;
-    --text-color: #f8fafc;
-    --text-muted: #94a3b8;
+    /* Mörkt Tech Tema / Glassmorphism - KONTRASTUPPDATERAD */
 
-    --glass-bg: rgba(30, 41, 59, 0.7);
-    --glass-border: rgba(255, 255, 255, 0.1);
-    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    /* Bakgrund gjord mörkare (nästan svart/djupblå) för att UI:t ska poppa */
+    --bg-color: #020617;
+    --text-color: #f8fafc;
+    /* Gjort den dämpade texten lite ljusare för bättre läsbarhet */
+    --text-muted: #cbd5e1;
+
+    /* Mindre genomskinlighet och starkare borders för tydligare boxar */
+    --glass-bg: rgba(30, 41, 59, 0.85);
+    --glass-border: rgba(255, 255, 255, 0.15);
+    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+
+    /* UI Elements & Layout Overlays */
+    --ui-bg: rgba(0, 0, 0, 0.4);
+    --ui-bg-solid: #1e293b;
+    --modal-surface: rgba(15, 23, 42, 0.98);
+
+    /* Table - Tydligare ramar */
+    --table-cell-bg: rgba(0, 0, 0, 0.3);
+    --table-cell-first: rgba(0, 0, 0, 0.5);
+    --table-border: rgba(255, 255, 255, 0.2);
+
+    /* Course Cards */
+    --code-text: #f1f5f9;
+    --hp-badge-bg: rgba(0, 0, 0, 0.6);
+    --card-fixed-bg: rgba(255, 255, 255, 0.15);
+
+    /* Course Card Backgrounds (Dark Mode) */
+    --bg-type-o: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(239, 68, 68, 0.05));
+    --bg-type-v: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(59, 130, 246, 0.05));
+    --bg-type-f: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.05));
+
+    /* Scrollbar */
+    --scrollbar-bg: rgba(255, 255, 255, 0.3);
+    --scrollbar-hover: rgba(255, 255, 255, 0.6);
 
     /* Varnings/Status färger */
-    --color-obl: rgba(239, 68, 68, 0.85);
-    /* Rödaktig (Obligatorisk) */
-    --color-inr: rgba(59, 130, 246, 0.85);
-    /* Blåaktig (Inriktning) */
-    --color-val: rgba(16, 185, 129, 0.85);
-    /* Grönaktig (Valbar) */
+    --color-obl: rgba(239, 68, 68, 0.9);
+    --color-inr: rgba(59, 130, 246, 0.9);
+    --color-val: rgba(16, 185, 129, 0.9);
 
-    --bg-hover: rgba(255, 255, 255, 0.1);
+    --bg-hover: rgba(255, 255, 255, 0.15);
 
     --drop-valid: rgba(59, 130, 246, 0.3);
     --drop-invalid: rgba(239, 68, 68, 0.3);
 
     --success: #22c55e;
     --danger: #ef4444;
+
+    /* Transition */
+    --theme-transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
+}
+
+/* Light Mode Overrides */
+body.light-mode {
+    /* Ljusare bakgrund och mycket mörkare text för max kontrast */
+    --bg-color: #dfdfdf;
+    --text-color: #000000;
+    --text-muted: #475569;
+
+    /* Vitare och mindre genomskinliga paneler, starkare border */
+    --glass-bg: rgba(255, 255, 255, 0.9);
+    --glass-border: rgba(0, 0, 0, 0.15);
+    --glass-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.05);
+
+    --bg-hover: rgba(0, 0, 0, 0.08);
+
+    /* Clean Light Mode UI Adjustments */
+    --ui-bg: rgba(0, 0, 0, 0.04);
+    --ui-bg-solid: #e2e8f0;
+    --modal-surface: rgba(255, 255, 255, 0.98);
+
+    /* Tabeller sticker ut bättre */
+    --table-cell-bg: rgba(221, 221, 221, 0.7);
+    --table-cell-first: rgb(255, 255, 255);
+    --table-border: rgba(0, 0, 0, 0.37);
+
+    --code-text: #1e293b;
+    --hp-badge-bg: rgba(0, 0, 0, 0.1);
+    --card-fixed-bg: rgba(0, 0, 0, 0.08);
+
+    /* Course Card Backgrounds (Light Mode - Kraftigare färg för kontrast) */
+    --bg-type-o: linear-gradient(135deg, rgba(239, 68, 68, 0.5), rgba(239, 68, 68, 0.15));
+    --bg-type-v: linear-gradient(135deg, rgba(59, 130, 246, 0.5), rgba(59, 130, 246, 0.15));
+    --bg-type-f: linear-gradient(135deg, rgba(34, 197, 94, 0.5), rgba(34, 197, 94, 0.15));
+
+    --scrollbar-bg: rgba(0, 0, 0, 0.2);
+    --scrollbar-hover: rgba(0, 0, 0, 0.4);
 }
 
 * {
@@ -43,9 +108,16 @@ body {
     color: var(--text-color);
     height: 100vh;
     overflow: hidden;
-    /* Förhindrar att hela sidan scrollar, bara listorna ska scrolla */
+    /* Förhindrar att hela sidan scrollar, bara listorna ska scrollar */
     display: flex;
     flex-direction: column;
+    transition: var(--theme-transition);
+}
+
+body.light-mode {
+    background-image:
+        radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.08) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(239, 68, 68, 0.05) 0px, transparent 50%);
 }
 
 /* Glassmorphism Utilities */
@@ -56,12 +128,13 @@ body {
     border: 1px solid var(--glass-border);
     box-shadow: var(--glass-shadow);
     border-radius: 12px;
+    transition: var(--theme-transition);
 }
 
 /* Header */
 .main-header {
     padding: 0.75rem 1.5rem;
-    background: rgba(15, 23, 42, 0.8);
+    background: var(--glass-bg);
     backdrop-filter: blur(16px);
     border-bottom: 1px solid var(--glass-border);
     display: flex;
@@ -71,6 +144,7 @@ body {
     position: sticky;
     top: 0;
     z-index: 100;
+    transition: var(--theme-transition);
 }
 
 .header-top {
@@ -98,7 +172,7 @@ h1 {
 }
 
 .glass-input {
-    background: rgba(0, 0, 0, 0.2);
+    background: var(--ui-bg);
     border: 1px solid var(--glass-border);
     color: var(--text-color);
     border-radius: 6px;
@@ -108,18 +182,59 @@ h1 {
     outline: none;
     cursor: pointer;
     backdrop-filter: blur(4px);
+    transition: var(--theme-transition);
 }
 
 .btn {
-    padding: 0.35rem 1rem;
-    /* Minskad från 0.5rem 1.25rem */
-    border-radius: 6px;
+    padding: 0.5rem 1rem;
     border: none;
-    font-weight: 600;
+    border-radius: 6px;
     cursor: pointer;
-    font-family: 'Inter', sans-serif;
+    font-weight: 600;
     transition: all 0.2s;
-    color: white;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+#theme-toggle {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    color: var(--text-color);
+    padding: 0.5rem;
+    width: 40px;
+    height: 40px;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+#theme-toggle:hover {
+    background: var(--bg-hover);
+    transform: scale(1.1);
+}
+
+#theme-toggle svg {
+    width: 20px;
+    height: 20px;
+    stroke: currentColor;
+    fill: none;
+    transition: all 0.2s ease;
+}
+
+/* Tvingar månen att bli mörk (och fylld) i light mode för maximal kontrast */
+body.light-mode #theme-toggle svg {
+    stroke: #0f172a;
+    fill: #0f172a;
+}
+
+/* Gömma rätt ikon beroende på mode */
+body.light-mode #sun-icon {
+    display: none;
+}
+
+body:not(.light-mode) #moon-icon {
+    display: none;
 }
 
 .btn-danger {
@@ -162,7 +277,7 @@ h1 {
     flex: 1;
     position: relative;
     /* Viktigt för att progressbaren ska kunna ligga i bakgrunden */
-    background: rgba(0, 0, 0, 0.2);
+    background: var(--ui-bg);
     border: 1px solid var(--glass-border);
     border-radius: 6px;
     padding: 0.5rem 1rem;
@@ -174,13 +289,13 @@ h1 {
     align-items: center;
     overflow: hidden;
     /* Förhindrar att progressbaren spiller utanför de rundade hörnen */
-    transition: all 0.3s ease;
+    transition: var(--theme-transition);
     min-height: 36px;
 }
 
 .stat-label {
     font-size: 0.85rem;
-    color: var(--text-muted);
+    color: var(--text-color);
     text-transform: uppercase;
     letter-spacing: 0.05em;
     font-weight: 600;
@@ -260,10 +375,11 @@ h1 {
 }
 
 .schedule-table th {
-    background: #1e293b;
-    /* Opaque background for sticky header */
-    color: var(--text-muted);
-    font-weight: 600;
+    background: var(--ui-bg-solid);
+    color: var(--text-color);
+    /* Ändrad från --text-muted till --text-color för skarpare kontrast */
+    font-weight: 700;
+    /* Kanske dra upp font-weight ett snäpp också */
     font-size: 0.85rem;
     padding: 0.75rem;
     text-transform: uppercase;
@@ -271,7 +387,8 @@ h1 {
     position: sticky;
     top: 0;
     z-index: 20;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    transition: var(--theme-transition);
 }
 
 .schedule-table th:first-child {
@@ -279,8 +396,8 @@ h1 {
 }
 
 .schedule-table td {
-    background: rgba(0, 0, 0, 0.15);
-    border: 1px dashed rgba(255, 255, 255, 0.1);
+    background: var(--table-cell-bg);
+    border: 1px dashed var(--table-border);
     border-radius: 6px;
     height: 90px;
     vertical-align: top;
@@ -290,7 +407,7 @@ h1 {
 }
 
 .schedule-table td:first-child {
-    background: rgba(0, 0, 0, 0.2);
+    background: var(--table-cell-first);
     border: none;
     text-align: center;
     vertical-align: middle;
@@ -307,6 +424,52 @@ h1 {
 .schedule-table td.invalid-drop {
     background: var(--drop-invalid);
     border-color: #ef4444;
+}
+
+
+/* =========================================
+   Parallella kurser (Delade celler)
+   ========================================= */
+.schedule-table td.parallel-cell {
+    display: flex !important;
+    flex-direction: column;
+    gap: 2px;
+    padding: 2px;
+    height: 90px;
+    justify-content: space-between;
+    overflow: hidden;
+}
+
+.course-card.parallel-card {
+    flex: 1;
+    min-height: 0;
+    padding: 2px 6px;
+    font-size: 0.7rem;
+    gap: 0;
+}
+
+.course-card.parallel-card .course-name {
+    -webkit-line-clamp: 1;
+    /* Bara en rad för namnet för att spara plats */
+    font-size: 0.75rem;
+}
+
+.course-card.parallel-card .course-meta {
+    display: none;
+    /* Dölj metadata i små kort för att få plats */
+}
+
+.course-card.parallel-card .course-hp {
+    font-size: 0.6rem;
+    padding: 1px 4px;
+}
+
+.course-card.parallel-card .remove-btn {
+    width: 16px;
+    height: 16px;
+    font-size: 10px;
+    top: -4px;
+    right: -4px;
 }
 
 /* Varning vid över 15 HP i perioden */
@@ -351,12 +514,13 @@ h1 {
 }
 
 ::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
+    background: var(--scrollbar-bg);
     border-radius: 10px;
+    transition: background 0.2s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.4);
+    background: var(--scrollbar-hover);
 }
 
 .list-container {
@@ -379,8 +543,9 @@ h1 {
     padding: 1rem;
     border-bottom: 1px solid var(--glass-border);
     margin: 0;
-    background: rgba(0, 0, 0, 0.2);
+    background: var(--ui-bg);
     border-radius: 12px 12px 0 0;
+    transition: var(--theme-transition);
 }
 
 .course-list {
@@ -395,14 +560,14 @@ h1 {
 
 /* Course Card */
 .course-card {
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--glass-bg);
     border: 1px solid var(--glass-border);
     border-radius: 6px;
     padding: 0.5rem 0.75rem;
     cursor: grab;
     position: relative;
     user-select: none;
-    transition: transform 0.1s, box-shadow 0.2s, background 0.2s;
+    transition: transform 0.1s, box-shadow 0.2s, background 0.2s, border-color 0.2s;
     font-size: 0.85rem;
     display: flex;
     flex-direction: column;
@@ -414,23 +579,23 @@ h1 {
 }
 
 .course-card.type-O {
-    background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.05));
+    background: var(--bg-type-o);
     border-left-color: #ef4444;
 }
 
 .course-card.type-V {
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(59, 130, 246, 0.05));
+    background: var(--bg-type-v);
     border-left-color: #3b82f6;
 }
 
 .course-card.type-F {
-    background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(34, 197, 94, 0.05));
+    background: var(--bg-type-f);
     border-left-color: #22c55e;
 }
 
 .course-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 /* Schedule cards are clickable links */
@@ -446,7 +611,7 @@ h1 {
 .course-card.fixed {
     cursor: not-allowed;
     opacity: 0.9;
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--card-fixed-bg);
     border-left: 4px solid #94a3b8;
 }
 
@@ -478,15 +643,17 @@ h1 {
 
 .course-code {
     letter-spacing: 0.2px;
-    color: #e2e8f0;
+    color: var(--code-text);
     white-space: nowrap;
+    transition: var(--theme-transition);
 }
 
 .course-hp {
     font-size: 0.75rem;
-    background: rgba(0, 0, 0, 0.3);
+    background: var(--hp-badge-bg);
     padding: 2px 6px;
     border-radius: 10px;
+    transition: var(--theme-transition);
 }
 
 .badge-multi {
@@ -581,7 +748,7 @@ h1 {
 }
 
 .modal-content {
-    background: rgba(15, 23, 42, 0.95);
+    background: var(--modal-surface);
     width: 90%;
     max-width: 600px;
     max-height: 80vh;
@@ -591,6 +758,8 @@ h1 {
     flex-direction: column;
     gap: 1.5rem;
     overflow-y: auto;
+    border-radius: 12px;
+    transition: var(--theme-transition);
 }
 
 .close-btn {
@@ -627,9 +796,10 @@ h1 {
     display: flex;
     justify-content: space-between;
     padding: 0.5rem;
-    background: rgba(0, 0, 0, 0.2);
+    background: var(--ui-bg);
     border-radius: 6px;
     font-size: 0.9rem;
+    transition: var(--theme-transition);
 }
 
 .modal-actions {

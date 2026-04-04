@@ -1,8 +1,7 @@
-
-
 // DOM Elements
 const profileSelect = document.getElementById('profile-select');
 const clearBtn = document.getElementById('clear-btn');
+const themeToggle = document.getElementById('theme-toggle');
 const saveBtn = document.getElementById('save-btn');
 const scheduleBody = document.getElementById('schedule-body');
 const oblList = document.getElementById('obl-courses');
@@ -13,12 +12,11 @@ const modalClose = document.getElementById('modal-close');
 const receiptInfo = document.getElementById('receipt-info');
 const receiptList = document.getElementById('receipt-list');
 
-
 // Data State
 const PERIODS = ["T7-P1", "T7-P2", "T8-P1", "T8-P2", "T9-P1", "T9-P2", "T10-P1", "T10-P2"];
 let currentProfile = "";
 let courses = [];
-let schedule = {}; // schedule[period][block] = courseId
+let schedule = {}; // schedule[period][block] = [courseId1, courseId2]
 
 // Filters
 let filterTerm = "Alla";
@@ -31,8 +29,39 @@ let filterMulti = false;
 let draggedCourseId = null;
 let dragSource = null; // 'list' or {period, block}
 
+// Patchar datan direkt vid start (TMPR04 får finnas i alla block men behåller 4 som default)
+function patchData() {
+    const applyPatch = (c) => {
+        if (c.id.startsWith("TMPR04")) {
+            c.blocks = [1, 2, 3, 4];
+            // Vi behåller c.defB intakt (som är 4 från data.js)
+        }
+    };
+    Object.values(profilData).forEach(list => list.forEach(applyPatch));
+    allCourses.forEach(applyPatch);
+}
+
+// Hjälpfunktion för att kolla om två kurser får ligga parallellt i samma ruta
+function canBeParallel(course, targetPeriod, targetBlock) {
+    if (!schedule[targetPeriod] || !schedule[targetPeriod][targetBlock]) return false;
+    const existingIds = schedule[targetPeriod][targetBlock];
+
+    if (existingIds.length === 0) return true; // Helt ledigt
+    if (existingIds.length >= 2) return false; // Redan fullt (max 2)
+
+    const existingObj = getCourse(existingIds[0]);
+    if (existingObj && existingObj.fixed) return false; // Rör ej fasta kurser (exjobb)
+    if (course.fixed) return false;
+
+    // Minst en måste vara flerperiod (span)
+    let isMulti = (existingObj && existingObj.span) || course.span;
+    return isMulti;
+}
+
 // Initialize
 function init() {
+    patchData();
+
     // Fyll dropdown
     const profiles = Object.keys(profilData);
     profiles.forEach(p => {
@@ -44,6 +73,7 @@ function init() {
 
     profileSelect.addEventListener('change', (e) => loadProfile(e.target.value));
     clearBtn.addEventListener('click', clearSchedule);
+    if (themeToggle) themeToggle.addEventListener('click', toggleTheme);
     saveBtn.addEventListener('click', showReceiptModal);
     modalClose.addEventListener('click', () => modalOverlay.classList.add('hidden'));
 
@@ -60,7 +90,7 @@ function init() {
     if (fAdv) fAdv.addEventListener('change', (e) => { filterAdv = e.target.checked; renderLists(); });
     if (fMulti) fMulti.addEventListener('change', (e) => { filterMulti = e.target.checked; renderLists(); });
 
-    // NYTT: Typ-filter dropdown
+    // Typ-filter dropdown
     const fType = document.getElementById('course-type-filter');
     if (fType) fType.addEventListener('change', renderLists);
 
@@ -79,10 +109,21 @@ function init() {
 
     buildTableStructure();
 
+    // Theme initialization
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    if (savedTheme === 'light') {
+        document.body.classList.add('light-mode');
+    }
+
     // Ladda senast valda profil eller första
     const savedProfile = localStorage.getItem('lastProfile') || profiles[0];
     profileSelect.value = savedProfile;
     loadProfile(savedProfile);
+}
+
+function toggleTheme() {
+    const isLight = document.body.classList.toggle('light-mode');
+    localStorage.setItem('theme', isLight ? 'light' : 'dark');
 }
 
 function buildTableStructure() {
@@ -94,11 +135,10 @@ function buildTableStructure() {
         const label = period.replace('-', ' ').replace('P', 'Period ').replace('T', 'Termin ');
 
         const th = document.createElement('td');
-        // Klick på rubriken sätter filter till Termin och Period
         th.style.cursor = 'pointer';
         th.addEventListener('click', () => {
-            const termMatch = period.split('-')[0]; // T7
-            const periodMatch = period.split('-')[1]; // P1
+            const termMatch = period.split('-')[0];
+            const periodMatch = period.split('-')[1];
             document.getElementById('filter-term').value = termMatch.replace('T', '');
             document.getElementById('filter-period').value = periodMatch.replace('P', '');
             document.getElementById('filter-block').value = "Alla";
@@ -134,35 +174,44 @@ function loadProfile(pName) {
     currentProfile = pName;
     localStorage.setItem('lastProfile', pName);
 
-    // Klona data så vi har en fresh state
     courses = JSON.parse(JSON.stringify(profilData[pName]));
 
     // Init tom schedule
     schedule = {};
     PERIODS.forEach(p => {
-        schedule[p] = { 1: null, 2: null, 3: null, 4: null };
+        schedule[p] = { 1: [], 2: [], 3: [], 4: [] };
     });
 
-    // Ladda sparade val från localStorage
     const savedState = localStorage.getItem('schema_' + pName);
     if (savedState) {
-        schedule = JSON.parse(savedState);
-        // Rensa dubbletter av Examensarbete i block 2-4 efter laddning från localStorage
-        ['T10-P1', 'T10-P2'].forEach(p => {
-            for (let b = 2; b <= 4; b++) {
-                if (schedule[p][b] && schedule[p][b].startsWith('TQXX33')) {
-                    schedule[p][b] = null;
+        let parsed = JSON.parse(savedState);
+        PERIODS.forEach(p => {
+            for (let b = 1; b <= 4; b++) {
+                if (parsed[p] && parsed[p][b] !== undefined) {
+                    if (Array.isArray(parsed[p][b])) {
+                        schedule[p][b] = parsed[p][b];
+                    } else if (parsed[p][b] !== null) {
+                        schedule[p][b] = [parsed[p][b]];
+                    }
                 }
             }
         });
+
+        // Rensa dubbletter av Examensarbete i block 2-4
+        ['T10-P1', 'T10-P2'].forEach(p => {
+            for (let b = 2; b <= 4; b++) {
+                schedule[p][b] = schedule[p][b].filter(id => !id.startsWith('TQXX33'));
+            }
+        });
     } else {
-        // Auto-placera obligatoriska kurser som fallback
+        // Auto-placera obligatoriska kurser som fallback vid nytt schema
         courses.filter(c => c.type === 'O').forEach(c => {
-            if (c.defP && c.defB && c.defB !== '-' && !schedule[c.defP][c.defB]) {
-                schedule[c.defP][c.defB] = c.id;
+            if (c.defP && c.defB && c.defB !== '-') {
+                if (canBeParallel(c, c.defP, c.defB)) {
+                    schedule[c.defP][c.defB].push(c.id);
+                }
             } else if (c.defP && (c.defB === '-' || (c.blocks && c.blocks.includes('-'))) && c.fixed) {
-                // Kurs med flexibelt block och fixed=true: lägg bara i block 1
-                if (!schedule[c.defP][1]) schedule[c.defP][1] = c.id;
+                if (canBeParallel(c, c.defP, 1)) schedule[c.defP][1].push(c.id);
             }
         });
     }
@@ -174,15 +223,16 @@ function clearSchedule() {
     if (!confirm("Vill du rensa hela schemat för denna profil (inkl. obligatoriska kurser)?")) return;
 
     PERIODS.forEach(p => {
-        schedule[p] = { 1: null, 2: null, 3: null, 4: null };
+        schedule[p] = { 1: [], 2: [], 3: [], 4: [] };
     });
 
-    // Auto-placera obligatoriska kurser igen
     courses.filter(c => c.type === 'O').forEach(c => {
-        if (c.defP && c.defB && c.defB !== '-' && !schedule[c.defP][c.defB]) {
-            schedule[c.defP][c.defB] = c.id;
+        if (c.defP && c.defB && c.defB !== '-') {
+            if (canBeParallel(c, c.defP, c.defB)) {
+                schedule[c.defP][c.defB].push(c.id);
+            }
         } else if (c.defP && (c.defB === '-' || (c.blocks && c.blocks.includes('-'))) && c.fixed) {
-            if (!schedule[c.defP][1]) schedule[c.defP][1] = c.id;
+            if (canBeParallel(c, c.defP, 1)) schedule[c.defP][1].push(c.id);
         }
     });
 
@@ -206,47 +256,51 @@ function renderAll() {
 }
 
 function renderTable() {
-    // Töm först alla celler
     document.querySelectorAll('.dropzone').forEach(td => {
         td.innerHTML = '';
-        td.className = 'dropzone'; // reset (removes exam-span-cell etc.)
+        td.className = 'dropzone';
         td.style.visibility = '';
     });
 
-    // Rensa eventuella dubbletter av Examensarbete i block 2-4 (så vi bara räknar hp en gång)
     ['T10-P1', 'T10-P2'].forEach(p => {
         for (let b = 2; b <= 4; b++) {
-            if (schedule[p][b] && schedule[p][b].startsWith('TQXX33')) {
-                schedule[p][b] = null;
-            }
+            schedule[p][b] = schedule[p][b].filter(id => !id.startsWith('TQXX33'));
         }
     });
 
     PERIODS.forEach(p => {
         for (let b = 1; b <= 4; b++) {
-            const courseId = schedule[p][b];
-            if (courseId) {
-                const course = getCourse(courseId);
-                const td = document.querySelector(`td[data-period="${p}"][data-block="${b}"]`);
-                if (course && td) {
-                    td.appendChild(createCourseCard(course, true));
+            const courseIds = schedule[p][b];
+            const td = document.querySelector(`td[data-period="${p}"][data-block="${b}"]`);
+
+            if (td && courseIds.length > 0) {
+                if (courseIds.length > 1) {
+                    td.classList.add('parallel-cell');
                 }
+                courseIds.forEach(cid => {
+                    const course = getCourse(cid);
+                    if (course) {
+                        let card = createCourseCard(course, true);
+                        if (courseIds.length > 1) card.classList.add('parallel-card');
+                        td.appendChild(card);
+                    }
+                });
             }
         }
     });
 
-    // Visuell sammanslagning (span) för syskonkurser i samma block över perioder
-    // Om T7-P1 och T7-P2 har samma kurs i samma block, ta bort margin/border mellan dem.
+    // Visuell sammanslagning för syskonkurser (görs bara om rutan inte är parallel för att undvika grafikbuggar)
     PERIODS.forEach((p, index) => {
-        if (index === PERIODS.length - 1) return; // ignore last
+        if (index === PERIODS.length - 1) return;
         const nextP = PERIODS[index + 1];
 
         for (let b = 1; b <= 4; b++) {
-            const idTop = schedule[p][b];
-            const idBot = schedule[nextP][b];
-            if (idTop && idBot) {
-                const baseTop = idTop.split('_')[0];
-                const baseBot = idBot.split('_')[0];
+            const idsTop = schedule[p][b];
+            const idsBot = schedule[nextP][b];
+
+            if (idsTop.length === 1 && idsBot.length === 1) {
+                const baseTop = idsTop[0].split('_')[0];
+                const baseBot = idsBot[0].split('_')[0];
                 if (baseTop === baseBot) {
                     const topDiv = document.querySelector(`td[data-period="${p}"][data-block="${b}"] .course-card`);
                     const botDiv = document.querySelector(`td[data-period="${nextP}"][data-block="${b}"] .course-card`);
@@ -264,29 +318,24 @@ function renderTable() {
         }
     });
 
-    // Examensarbetet: sitter i block 1 men visuellt spänner över alla 4 block
+    // Examensarbetet
     ['T10-P1', 'T10-P2'].forEach(p => {
-        const exam1 = schedule[p][1];
-        if (exam1 && exam1.startsWith('TQXX33')) {
-            // Visa kortet i block 1 med span
+        const ids1 = schedule[p][1];
+        if (ids1.length > 0 && ids1[0].startsWith('TQXX33')) {
             const card = document.querySelector(`td[data-period="${p}"][data-block="1"] .course-card`);
             if (card) card.classList.add('span-all-blocks');
-            // Rensa innehåll i block 2-4 (men behåll default styling)
             for (let b = 2; b <= 4; b++) {
                 const tdEl = document.querySelector(`td[data-period="${p}"][data-block="${b}"]`);
-                if (tdEl) {
-                    tdEl.innerHTML = '';
-                    // inga extra klasser, behåll default td styling
-                }
+                if (tdEl) tdEl.innerHTML = '';
             }
         }
     });
 }
 
 function handleEmptyCellClick(p, b) {
-    if (schedule[p][b]) return; // klicka inuti upptagen gör inget filter.
-    const termMatch = p.split('-')[0]; // ex "T7"
-    const periodMatch = p.split('-')[1]; // ex "P1"
+    if (schedule[p][b].length > 0) return;
+    const termMatch = p.split('-')[0];
+    const periodMatch = p.split('-')[1];
 
     document.getElementById('filter-term').value = termMatch.replace('T', '');
     document.getElementById('filter-period').value = periodMatch.replace('P', '');
@@ -302,64 +351,44 @@ function handleEmptyCellClick(p, b) {
 function renderLists() {
     const allList = document.getElementById('all-courses');
     if (!allList) return;
-
     allList.innerHTML = '';
 
-    // Vilka ligger redan i schemat?
     const scheduledIds = new Set();
     PERIODS.forEach(p => {
         for (let b = 1; b <= 4; b++) {
-            if (schedule[p][b]) scheduledIds.add(schedule[p][b]);
+            schedule[p][b].forEach(id => scheduledIds.add(id));
         }
     });
 
-    // Bygg komplett lista
     let fullList = [...courses];
-
     allCourses.forEach(gc => {
-        let exists = fullList.find(c => c.id === gc.id);
-        if (!exists) {
-            fullList.push(gc);
-        }
+        if (!fullList.find(c => c.id === gc.id)) fullList.push(gc);
     });
 
-    const typePriority = { 'O': 1, 'V': 2, 'F': 3 };
+    const typeFilter = document.getElementById("course-type-filter")?.value || "ALL";
+
     const sortedCourses = fullList.sort((a, b) => {
-        // Först prioritera efter typ/inriktning
         const pA = a.type === 'O' ? 1 : (a.inriktning ? 2 : 3);
         const pB = b.type === 'O' ? 1 : (b.inriktning ? 2 : 3);
-
         if (pA !== pB) return pA - pB;
-        // Sedan bokstavsordning på kod
         return a.code.localeCompare(b.code);
     });
 
-    // 🔥 NYTT FILTER (dropdown)
-    const typeFilter = document.getElementById("course-type-filter").value;
-
     sortedCourses.forEach(course => {
         if (scheduledIds.has(course.id)) return;
+        if (course.id.endsWith('_2')) return; // Gömmer Del 2 i listan
 
-        const isDel2 = course.id.endsWith('_2');
-        if (isDel2) return;
-
-        // Filter (din gamla logik)
         const cTerm = course.period ? course.period.split('-')[0].replace('T', '') : '';
         const cPer = course.period ? course.period.split('-')[1].replace('P', '') : '';
 
         if (filterTerm !== "Alla" && cTerm && cTerm !== filterTerm) return;
         if (filterPeriod !== "Alla" && cPer && cPer !== filterPeriod) return;
-        // Blockfilter: hoppa över om kursen har flexibelt block ("-")
+
         const isFlexBlock = course.blocks.includes('-') || course.blocks.length === 0;
         if (filterBlock !== "Alla" && !isFlexBlock && !course.blocks.includes(Number(filterBlock))) return;
-
-        // Filter: Avancerad nivå (A) — level börjar med 'A'
         if (filterAdv && !course.level.startsWith('A')) return;
-
-        // Filter: Flerperiodskurser — har span-property
         if (filterMulti && !course.span) return;
 
-        // 🔥 NYTT: typ-filter
         if (typeFilter !== "ALL") {
             if (typeFilter === "O" && course.type !== "O") return;
             if (typeFilter === "V" && !course.inriktning) return;
@@ -369,7 +398,6 @@ function renderLists() {
         const card = createCourseCard(course, false);
 
         if (course.id.endsWith('_1')) {
-            // Visa kombinerad HP för hela kursen i listan
             const siblingId = course.id.replace('_1', '_2');
             const sibling = getCourse(siblingId);
             const totalHp = sibling ? course.hp + sibling.hp : course.hp;
@@ -389,13 +417,12 @@ function renderLists() {
 function getCourseUrl(course) {
     const code = course.code || course.id.replace(/_[12](@.*)?$/, '');
     const period = course.defP || course.period || '';
-    const term = period.split('-')[0]; // e.g. "T7", "T8", "T9", "T10"
+    const term = period.split('-')[0];
     let suffix = '';
     if (term === 'T7') suffix = '/ht-2026#syllabus';
     else if (term === 'T8') suffix = '/vt-2026#syllabus';
     else if (term === 'T9') suffix = '/ht-2026#syllabus';
     else if (term === 'T10') suffix = '/vt-2026#syllabus';
-    // T10 and others: no suffix
     return `https://studieinfo.liu.se/kurs/${code}${suffix}`;
 }
 
@@ -403,11 +430,8 @@ function createCourseCard(course, inSchedule) {
     const el = document.createElement('div');
     el.className = `course-card type-${course.type}`;
     if (!inSchedule) el.classList.add('list-mode');
-
-    // Fixed?
     if (course.fixed) el.classList.add('fixed');
     else el.draggable = true;
-
     el.dataset.id = course.id;
 
     el.innerHTML = `
@@ -429,7 +453,6 @@ function createCourseCard(course, inSchedule) {
         <button class="remove-btn ${inSchedule && !course.fixed ? '' : 'hidden-btn'}" title="Ta bort">&times;</button>
     `;
 
-    // Click on x
     const rmBtn = el.querySelector('.remove-btn');
     if (rmBtn) {
         rmBtn.addEventListener('click', (e) => {
@@ -438,11 +461,9 @@ function createCourseCard(course, inSchedule) {
         });
     }
 
-    // Drag events
     if (!course.fixed) {
         el.addEventListener('dragstart', (e) => {
             draggedCourseId = course.id;
-            // Bestäm källa
             let pCell = el.closest('td');
             if (pCell) {
                 dragSource = { period: pCell.dataset.period, block: Number(pCell.dataset.block) };
@@ -462,19 +483,14 @@ function createCourseCard(course, inSchedule) {
             });
         });
 
-        // Click från lista lägger in automatiskt
         if (!inSchedule) {
-            el.addEventListener('click', () => {
-                autoPlaceCourse(course);
-            });
+            el.addEventListener('click', () => autoPlaceCourse(course));
         } else {
-            // Click i schemat öppnar kurssidan – men bara vid äkta klick (ej drag)
             let dragMoved = false;
             el.addEventListener('mousedown', () => { dragMoved = false; });
             el.addEventListener('mousemove', () => { dragMoved = true; });
             el.addEventListener('click', (e) => {
-                if (dragMoved) return;
-                if (e.target.closest('.remove-btn')) return;
+                if (dragMoved || e.target.closest('.remove-btn')) return;
                 const url = getCourseUrl(course);
                 window.open(url, '_blank', 'noopener,noreferrer');
             });
@@ -489,24 +505,23 @@ function createCourseCard(course, inSchedule) {
 // ---------------------------
 
 function handleDragOver(e) {
-    e.preventDefault(); // Nödvändig för drop
+    e.preventDefault();
     const td = e.currentTarget;
     if (!draggedCourseId) return;
 
-    const course = courses.find(c => c.id === draggedCourseId);
+    const course = getCourse(draggedCourseId);
     if (isValidDrop(course, td.dataset.period, Number(td.dataset.block))) {
         td.classList.add('valid-drop');
         td.classList.remove('invalid-drop');
     } else {
         td.classList.add('invalid-drop');
         td.classList.remove('valid-drop');
-        e.dataTransfer.dropEffect = 'none'; // förbjud visuellt
+        e.dataTransfer.dropEffect = 'none';
     }
 }
 
 function handleDragLeave(e) {
-    const td = e.currentTarget;
-    td.classList.remove('valid-drop', 'invalid-drop');
+    e.currentTarget.classList.remove('valid-drop', 'invalid-drop');
 }
 
 function handleDrop(e) {
@@ -517,13 +532,11 @@ function handleDrop(e) {
     const courseId = e.dataTransfer.getData('text/plain');
     if (!courseId) return;
 
-    const course = courses.find(c => c.id === courseId);
+    const course = getCourse(courseId);
     const targetPeriod = td.dataset.period;
     const targetBlock = Number(td.dataset.block);
 
-    if (!isValidDrop(course, targetPeriod, targetBlock)) {
-        return; // avbryt
-    }
+    if (!isValidDrop(course, targetPeriod, targetBlock)) return;
 
     placeCourse(course, targetPeriod, targetBlock);
 }
@@ -532,47 +545,47 @@ function isValidDrop(course, targetPeriod, targetBlock) {
     if (!course) return false;
 
     const isFlexBlock = course.blocks.includes('-') || course.blocks.length === 0;
-
-    // Kolla om targetPeriod är antingen kursens standard-period eller en alternativ period
     const validPeriods = [course.period, ...(course.altPeriods || [])].filter(Boolean);
     const periodOk = validPeriods.length === 0 || validPeriods.includes(targetPeriod);
-
-    // Vid alternativperiod: tillåt vilket block som helst (1-4) eftersom ordinarie block kanske inte finns
     const isAltPeriod = course.period && course.period !== targetPeriod && (course.altPeriods || []).includes(targetPeriod);
 
     if (!periodOk) return false;
 
-    // Blockvalidering — hoppa över för alternativperioder (fritt block)
-    if (!isAltPeriod) {
-        if (!isFlexBlock && !course.blocks.includes(targetBlock)) return false;
-    }
+    // Validerar om kursen FÅR ligga i detta block
+    if (!isAltPeriod && !isFlexBlock && !course.blocks.includes(targetBlock)) return false;
 
-    // Om det redan ligger en kurs här
     const existing = schedule[targetPeriod][targetBlock];
-    if (existing && existing !== course.id) {
-        let existingObj = courses.find(c => c.id === existing);
-        if (existingObj && existingObj.fixed) return false;
+    if (existing.includes(course.id)) return false;
+
+    // Vi tillåter droppet (returnerar sant) oavsett om de blir parallella eller ska bytas ut, 
+    // så länge blocket inte är överfullt (max 2). Logiken för swap/parallel sker i placeCourse.
+    if (existing.length >= 2) return false;
+
+    if (existing.length === 1) {
+        let existingObj = getCourse(existing[0]);
+        if (existingObj && existingObj.fixed) return false; // Fasta kurser går ej att skriva över/kombinera
     }
 
     return true;
 }
 
 function removeFromSchedule(courseId) {
-    let course = courses.find(c => c.id === courseId);
-    // Ta bort från schema state
+    let course = getCourse(courseId);
+    if (!course) return;
+
     PERIODS.forEach(p => {
         for (let b = 1; b <= 4; b++) {
-            if (schedule[p][b] === courseId) schedule[p][b] = null;
+            schedule[p][b] = schedule[p][b].filter(id => id !== courseId);
         }
     });
 
-    // Om det är en del-kurs, flytta dess syskon också
+    // Tar bort syskonet ur hela schemat oavsett var det ligger
     if (courseId.endsWith('_1') || courseId.endsWith('_2')) {
         let base = courseId.split('_')[0];
         let sibling = courseId.endsWith('_1') ? base + '_2' : base + '_1';
         PERIODS.forEach(p => {
             for (let b = 1; b <= 4; b++) {
-                if (schedule[p][b] === sibling) schedule[p][b] = null;
+                schedule[p][b] = schedule[p][b].filter(id => id !== sibling);
             }
         });
     }
@@ -587,80 +600,59 @@ function getCourse(cid) {
 }
 
 function placeCourse(course, tPer, tBlock) {
-    // Ta bort existerande position för denna
+    // Rensa källan om vi drar från schemat
     if (dragSource && dragSource !== 'list') {
-        schedule[dragSource.period][dragSource.block] = null;
+        schedule[dragSource.period][dragSource.block] = schedule[dragSource.period][dragSource.block].filter(id => id !== course.id);
     }
 
-    const existingId = schedule[tPer][tBlock];
+    const existingIds = schedule[tPer][tBlock];
 
-    // Swap logik
-    if (existingId && existingId !== course.id) {
-        if (!confirm(`Cellen är upptagen av ${existingId}. Vill du ersätta den och flytta tillbaka den gamla?`)) {
-            // Restore origin
-            if (dragSource && dragSource !== 'list') schedule[dragSource.period][dragSource.block] = course.id;
-            return;
+    if (existingIds.length > 0 && !existingIds.includes(course.id)) {
+        let existingObj = getCourse(existingIds[0]);
+        let isMulti = (existingObj && existingObj.span) || course.span;
+
+        if (existingIds.length === 1 && isMulti) {
+            // Parallellt (inget bråk, de trängs bara ihop)
+            schedule[tPer][tBlock].push(course.id);
+        } else {
+            // Byter ut gamla kursen automatiskt om ingen är multi
+            existingIds.forEach(id => removeFromSchedule(id));
+            schedule[tPer][tBlock].push(course.id);
         }
-        removeFromSchedule(existingId);
+    } else if (!existingIds.includes(course.id)) {
+        schedule[tPer][tBlock].push(course.id);
     }
 
-    schedule[tPer][tBlock] = course.id;
-
-    // Syskonlogik för span: Om man droppar _1, försök tvinga _2
+    // Auto-placera syskon 
     if (course.id.endsWith('_1')) {
         let siblingId = course.id.replace('_1', '_2');
         let sibling = getCourse(siblingId);
-        if (sibling) {
+
+        let isSched = false;
+        PERIODS.forEach(p => { for (let b = 1; b <= 4; b++) { if (schedule[p][b].includes(siblingId)) isSched = true; } });
+
+        if (sibling && !isSched) {
             let nextPer = sibling.period;
             if (!nextPer) {
                 let idx = PERIODS.indexOf(tPer);
                 if (idx >= 0 && idx < PERIODS.length - 1) nextPer = PERIODS[idx + 1];
             }
-            if (nextPer) {
-                const sibFlex = sibling.defB === '-' || sibling.blocks.includes('-') || sibling.blocks.length === 0;
-                let siblingBlock = sibFlex ? null : (sibling.defB || sibling.blocks[0]);
-
-                if (sibFlex) {
-                    for (let b = 1; b <= 4; b++) {
-                        if (!schedule[nextPer][b]) { siblingBlock = b; break; }
-                    }
-                }
-
-                if (siblingBlock && !schedule[nextPer][siblingBlock]) {
-                    schedule[nextPer][siblingBlock] = sibling.id;
-                } else if (!sibFlex) {
-                    for (let b of sibling.blocks) {
-                        if (b !== '-' && !schedule[nextPer][b]) {
-                            schedule[nextPer][b] = sibling.id;
-                            break;
-                        }
-                    }
-                }
-            }
+            if (nextPer) autoPlaceCourse(sibling, true, nextPer);
         }
     } else if (course.id.endsWith('_2')) {
         let siblingId = course.id.replace('_2', '_1');
         let sibling = getCourse(siblingId);
-        if (sibling) {
+
+        let isSched = false;
+        PERIODS.forEach(p => { for (let b = 1; b <= 4; b++) { if (schedule[p][b].includes(siblingId)) isSched = true; } });
+
+        if (sibling && !isSched) {
             let prevPer = sibling.period;
             if (!prevPer) {
                 let idx = PERIODS.indexOf(tPer);
                 if (idx > 0) prevPer = PERIODS[idx - 1];
             }
-            if (prevPer) {
-                const sibFlex = sibling.defB === '-' || sibling.blocks.includes('-') || sibling.blocks.length === 0;
-                let siblingBlock = sibFlex ? null : (sibling.defB || sibling.blocks[0]);
-
-                if (sibFlex) {
-                    for (let b = 1; b <= 4; b++) {
-                        if (!schedule[prevPer][b]) { siblingBlock = b; break; }
-                    }
-                }
-
-                if (siblingBlock && !schedule[prevPer][siblingBlock]) {
-                    schedule[prevPer][siblingBlock] = sibling.id;
-                }
-            }
+            if (prevPer) autoPlaceCourse(sibling, true, prevPer);
         }
     }
 
@@ -672,18 +664,18 @@ function autoPlaceCourse(course, silent = false, forcedPeriod = null) {
     if (!p) p = "T7-P1";
 
     const isFlexBlock = course.defB === '-' || course.blocks.includes('-') || course.blocks.length === 0;
-
-    // Hitta första lediga block som är godkänt
     let found = false;
 
     if (!isFlexBlock) {
-        // Normal logic: default block först, sedan valfria
-        if (course.defB && !schedule[p][course.defB] && course.blocks.includes(course.defB)) {
+        // Prioriterar att lägga den i sitt default-block (ex. block 4 för TMPR04) 
+        // Även om det ligger något där, går det bra ifall de är godkända för "parallell"
+        if (course.defB && canBeParallel(course, p, course.defB) && course.blocks.includes(course.defB)) {
             placeCourse(course, p, course.defB);
             found = true;
         } else {
+            // Fallback - prövar övriga block som kursen stöder
             for (let b of course.blocks) {
-                if (!schedule[p][b]) {
+                if (canBeParallel(course, p, b)) {
                     placeCourse(course, p, b);
                     found = true;
                     break;
@@ -691,9 +683,9 @@ function autoPlaceCourse(course, silent = false, forcedPeriod = null) {
             }
         }
     } else {
-        // Flex-block: sök igenom block 1-4 och tag första lediga
+        // Flexibla kurser testar bara 1 till 4
         for (let b = 1; b <= 4; b++) {
-            if (!schedule[p][b]) {
+            if (canBeParallel(course, p, b)) {
                 placeCourse(course, p, b);
                 found = true;
                 break;
@@ -702,7 +694,7 @@ function autoPlaceCourse(course, silent = false, forcedPeriod = null) {
     }
 
     if (!found && !silent) {
-        alert("Kunde inte autoplacera kursen. Alla block för " + course.code + " i period " + p + " är fulla.");
+        alert("Kunde inte autoplacera kursen. Alla kompatibla block för " + course.code + " i period " + p + " är fulla.");
     }
 }
 
@@ -714,7 +706,6 @@ function autoPlaceCourse(course, silent = false, forcedPeriod = null) {
 function updateStats() {
     let tot = 0, adv = 0, tm = 0;
 
-    // Reset period varningar
     PERIODS.forEach(p => {
         const warnEl = document.getElementById(`warn-${p}`);
         if (warnEl) warnEl.textContent = '';
@@ -725,8 +716,8 @@ function updateStats() {
     PERIODS.forEach(p => {
         periodSums[p] = 0;
         for (let b = 1; b <= 4; b++) {
-            const cid = schedule[p][b];
-            if (cid) {
+            const cids = schedule[p][b];
+            cids.forEach(cid => {
                 let c = getCourse(cid);
                 if (c) {
                     tot += c.hp;
@@ -738,11 +729,10 @@ function updateStats() {
                         }
                     }
                 }
-            }
+            });
         }
     });
 
-    // Check varningar
     PERIODS.forEach(p => {
         const warnEl = document.getElementById(`warn-${p}`);
         if (warnEl) {
@@ -765,6 +755,8 @@ function updateProgressBar(id, value, max) {
     const fillEl = document.getElementById(`prog-${id}`);
     const boxEl = document.getElementById(`stat-${id}`);
 
+    if (!textEl || !fillEl || !boxEl) return;
+
     textEl.textContent = value;
     let pct = (value / max) * 100;
     if (pct > 100) pct = 100;
@@ -779,13 +771,12 @@ function updateProgressBar(id, value, max) {
 
 function showReceiptModal() {
     receiptList.innerHTML = '';
-    let totalHp = 0;
 
     let selectedCourses = [];
     PERIODS.forEach(p => {
         for (let b = 1; b <= 4; b++) {
-            const cid = schedule[p][b];
-            if (cid) {
+            const cids = schedule[p][b];
+            cids.forEach(cid => {
                 let obj = getCourse(cid);
                 if (obj) {
                     let c = Object.assign({}, obj);
@@ -793,7 +784,7 @@ function showReceiptModal() {
                     c.planB = b;
                     selectedCourses.push(c);
                 }
-            }
+            });
         }
     });
 
@@ -827,17 +818,12 @@ function showReceiptModal() {
         receiptList.appendChild(li);
     });
 
-    // Vi döljer modalen efter användarens input: "behöver inte det inte komma en pop up. Utan den kan ladda ner dirket"
-    // modalOverlay.classList.remove('hidden');
-
     if (window.html2canvas) {
-        // Temporarily expand table for full screenshot
         let schedElement = document.querySelector('.schedule-section');
         let wrapper = document.querySelector('.table-wrapper');
         let appCont = document.querySelector('.app-container');
 
         if (schedElement && wrapper) {
-            // Backup old styles
             const oldBodyH = document.body.style.height;
             const oldBodyOverflow = document.body.style.overflow;
             const oldSchedH = schedElement.style.height;
@@ -846,7 +832,6 @@ function showReceiptModal() {
             const oldContOverflow = appCont.style.overflow;
             const oldContHeight = appCont.style.height;
 
-            // Expand strictly
             document.body.style.height = "auto";
             document.body.style.overflow = "visible";
             appCont.style.overflow = "visible";
@@ -859,34 +844,32 @@ function showReceiptModal() {
 
             setTimeout(() => {
                 html2canvas(schedElement, {
-                    backgroundColor: "#0f172a",
+                    backgroundColor: document.body.classList.contains('light-mode') ? "#f8fafc" : "#020617",
                     scale: 2,
-                    windowHeight: schedElement.scrollHeight + 200 // Allow reading full height natively
+                    windowHeight: schedElement.scrollHeight + 200
                 }).then(canvas => {
                     let link = document.createElement('a');
                     link.download = `Masterval_${currentProfile}.png`;
                     link.href = canvas.toDataURL();
                     link.click();
 
-                    // Revert styles
                     document.body.style.height = oldBodyH;
                     document.body.style.overflow = oldBodyOverflow;
                     schedElement.style.height = oldSchedH;
                     schedElement.style.minHeight = oldSchedMinH;
                     wrapper.style.overflow = oldWrapperOverflow;
-                    wrapper.style.maxHeight = ""; // clear
+                    wrapper.style.maxHeight = "";
                     appCont.style.overflow = oldContOverflow;
                     appCont.style.height = oldContHeight;
                     schedElement.style.overflow = "hidden";
                 });
-            }, 300); // Längre timeout för reflow
+            }, 300);
         }
     } else {
         alert("Bildinspelning kunde inte laddas. Ett webbläsartillägg blockerar troligen html2canvas.");
     }
 }
 
-// Accordion-funktion för sidomenyn
 window.toggleList = function (listId, headerEl) {
     const list = document.getElementById(listId);
     if (list) {
